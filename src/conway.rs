@@ -11,7 +11,7 @@ pub enum Status {
 impl Status {
     pub fn get_rand() -> Status {
         let mut rng = thread_rng();
-        if rng.gen_range(0, 10) > 8 {
+        if rng.gen_range(0, 10) > 7 {
             return Status::Alive;
         }
 

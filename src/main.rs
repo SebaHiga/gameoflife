@@ -7,7 +7,7 @@ use conway::{Cell, GameOfLife, Status};
 
 fn main() {
     let mut stdin = async_stdin().bytes();
-    let fps = 10.0;
+    let fps = 12.0;
     let ten_millis = time::Duration::from_secs_f32(1.0 / fps);
     let mut matrix = Vec::new();
 
