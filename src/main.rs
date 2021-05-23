@@ -16,7 +16,7 @@ fn main() {
 
         for _ in 0..256 {
             cells.push(Cell {
-                content: '█',
+                content: 'X',
                 status: Status::Dead,
             });
         }
@@ -30,18 +30,21 @@ fn main() {
     matrix[4][10].set_status(Status::Alive);
     matrix[4][11].set_status(Status::Alive);
 
-    let mut gol = GameOfLife { matrix: matrix };
+    let mut gol = GameOfLife {
+        matrix: matrix.clone(),
+        matrix_prev: matrix.clone(),
+    };
 
     loop {
         let b = stdin.next();
 
         // temporal manual next
         if let Some(Ok(b'n')) = b {
-            gol.process();
         } else if let Some(Ok(b'q')) = b {
             break;
         }
 
+        gol.process();
         gol.render();
 
         thread::sleep(ten_millis);

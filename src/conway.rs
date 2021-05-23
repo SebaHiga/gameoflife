@@ -41,6 +41,7 @@ impl Cell {
 
 pub struct GameOfLife {
     pub matrix: Vec<Vec<Cell>>,
+    pub matrix_prev: Vec<Vec<Cell>>,
 }
 
 impl GameOfLife {
@@ -52,7 +53,7 @@ impl GameOfLife {
                 if r == 1 && c == 1 {
                     continue;
                 } else {
-                    if self.matrix[row + r - 1][col + c - 1].get_status() == Status::Alive {
+                    if self.matrix_prev[row + r - 1][col + c - 1].get_status() == Status::Alive {
                         alives += 1;
                     }
                 }
@@ -63,6 +64,8 @@ impl GameOfLife {
     }
 
     pub fn process(&mut self) {
+        self.matrix_prev = self.matrix.clone();
+
         for index_row in 1..self.matrix.len() - 1 {
             for index_col in 1..self.matrix[index_row].len() - 1 {
                 let alive = self.get_surrounded_alive(index_row, index_col);
