@@ -13,10 +13,17 @@ use termion::{
 use cell::{Cell, Status};
 pub mod cell;
 
-fn render(stdout: &mut RawTerminal<std::io::Stdout>, matrix: &Vec<&Vec<Cell>>, row: u16, col: u16) {
+fn render(stdout: &mut RawTerminal<std::io::Stdout>, matrix: &Vec<Vec<Cell>>, row: u16, col: u16) {
     for index_row in 0..matrix.len() {
         for index_col in 0..matrix[index_row].len() {
-            write!(stdout, "{}", matrix[index_row][index_col].get_content()).unwrap();
+            let cell = matrix[index_row][index_col].clone();
+
+            if cell.get_status() == Status::Alive {
+                write!(stdout, "{}", matrix[index_row][index_col].get_content()).unwrap();
+            } else {
+                write!(stdout, "{}", ' ').unwrap();
+            }
+
             stdout.flush().unwrap();
 
             if index_col >= (row - 1) as usize {
@@ -32,21 +39,23 @@ fn render(stdout: &mut RawTerminal<std::io::Stdout>, matrix: &Vec<&Vec<Cell>>, r
 fn main() {
     let mut stdin = async_stdin().bytes();
     let mut stdout = stdout().into_raw_mode().unwrap();
-    let ten_millis = time::Duration::from_millis(100);
+    let fps = 12.0;
+    let ten_millis = time::Duration::from_secs_f32(1.0 / fps);
     let mut matrix = Vec::new();
-    let mut cells = Vec::new();
 
-    for _ in 0..256 {
-        cells.push(Cell {
-            row: 0,
-            col: 0,
-            content: '█',
-            status: Status::On,
-        });
-    }
+    for _ in 0..64 {
+        let mut cells = Vec::new();
 
-    for _ in 0..256 {
-        matrix.push(&cells);
+        for _ in 0..256 {
+            cells.push(Cell {
+                row: 0,
+                col: 0,
+                content: '█',
+                status: Status::get_rand(),
+            });
+        }
+
+        matrix.push(cells);
     }
 
     loop {

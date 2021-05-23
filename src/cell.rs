@@ -1,10 +1,24 @@
-#[derive(Clone, Copy, Debug)]
+extern crate rand;
+
+use rand::prelude::*;
+#[derive(Clone, Copy, Debug, std::cmp::PartialEq)]
 pub enum Status {
-    On,
-    Off,
+    Alive,
+    Dead,
 }
 
-#[derive(Debug)]
+impl Status {
+    pub fn get_rand() -> Status {
+        let mut rng = thread_rng();
+        if rng.gen_range(0, 10) > 8 {
+            return Status::Alive;
+        }
+
+        Status::Dead
+    }
+}
+
+#[derive(Debug, Copy, Clone)]
 pub struct Cell {
     pub row: u16,
     pub col: u16,
