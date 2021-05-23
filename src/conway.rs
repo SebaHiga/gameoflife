@@ -33,6 +33,10 @@ impl Cell {
     pub fn get_content(&self) -> char {
         self.content
     }
+
+    pub fn set_status(&mut self, status: Status) {
+        self.status = status;
+    }
 }
 
 pub struct GameOfLife {
@@ -40,6 +44,48 @@ pub struct GameOfLife {
 }
 
 impl GameOfLife {
+    fn get_surrounded_alive(&self, row: usize, col: usize) -> u16 {
+        let mut alives = 0;
+
+        for r in 0..=2 {
+            for c in 0..=2 {
+                if r == 1 && c == 1 {
+                    continue;
+                } else {
+                    if self.matrix[row + r - 1][col + c - 1].get_status() == Status::Alive {
+                        alives += 1;
+                    }
+                }
+            }
+        }
+
+        alives
+    }
+
+    pub fn process(&mut self) {
+        for index_row in 1..self.matrix.len() - 1 {
+            for index_col in 1..self.matrix[index_row].len() - 1 {
+                let alive = self.get_surrounded_alive(index_row, index_col);
+
+                match self.matrix[index_row][index_col].get_status() {
+                    Status::Alive => {
+                        if alive == 2 || alive == 3 {
+                            continue;
+                        } else {
+                            self.matrix[index_row][index_col].set_status(Status::Dead);
+                        }
+                    }
+
+                    Status::Dead => {
+                        if alive == 3 {
+                            self.matrix[index_row][index_col].set_status(Status::Alive);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     pub fn render(&self) {
         let mut stdout = stdout().into_raw_mode().unwrap();
         let (row, col) = terminal_size().unwrap();
