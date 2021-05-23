@@ -11,7 +11,7 @@ pub enum Status {
 impl Status {
     pub fn get_rand() -> Status {
         let mut rng = thread_rng();
-        if rng.gen_range(0, 10) > 7 {
+        if rng.gen_range(0, 10) > 6 {
             return Status::Alive;
         }
 
@@ -40,11 +40,37 @@ impl Cell {
 }
 
 pub struct GameOfLife {
-    pub matrix: Vec<Vec<Cell>>,
-    pub matrix_prev: Vec<Vec<Cell>>,
+    matrix: Vec<Vec<Cell>>,
+    matrix_prev: Vec<Vec<Cell>>,
+    offset_row: usize,
+    offset_col: usize,
 }
 
 impl GameOfLife {
+    pub fn new() -> GameOfLife {
+        let mut matrix = Vec::new();
+
+        for _ in 0..256 {
+            let mut cells = Vec::new();
+
+            for _ in 0..256 {
+                cells.push(Cell {
+                    content: '█',
+                    status: Status::get_rand(),
+                });
+            }
+
+            matrix.push(cells);
+        }
+
+        GameOfLife {
+            matrix: matrix.clone(),
+            matrix_prev: matrix.clone(),
+            offset_row: 64,
+            offset_col: 64,
+        }
+    }
+
     fn get_surrounded_alive(&self, row: usize, col: usize) -> u16 {
         let mut alives = 0;
 
@@ -91,7 +117,7 @@ impl GameOfLife {
 
     pub fn render(&self) {
         let mut stdout = stdout().into_raw_mode().unwrap();
-        let (row, col) = terminal_size().unwrap();
+        let (col, row) = terminal_size().unwrap();
 
         write!(
             stdout,
@@ -101,8 +127,8 @@ impl GameOfLife {
         )
         .unwrap();
 
-        for index_row in 0..self.matrix.len() {
-            for index_col in 0..self.matrix[index_row].len() {
+        for index_row in self.offset_row..self.matrix.len() {
+            for index_col in self.offset_col..self.matrix[index_row].len() {
                 let cell = self.matrix[index_row][index_col].clone();
 
                 if cell.get_status() == Status::Alive {
@@ -118,13 +144,34 @@ impl GameOfLife {
 
                 stdout.flush().unwrap();
 
-                if index_col >= (row - 1) as usize {
+                if index_col - self.offset_col >= (col - 1) as usize {
+                    // println!("breaked with col rendered {} cols {}", col_rendered, col);
                     break;
                 }
             }
-            if index_row >= (col - 1) as usize {
+
+            if index_row - self.offset_row >= (row - 1) as usize {
                 break;
             }
+
+            write!(stdout, "\n\r").unwrap();
         }
+    }
+
+    pub fn shift_right(&mut self, col: usize) {
+        self.offset_col += col;
+    }
+    pub fn shift_left(&mut self, col: usize) {
+        if self.offset_col > 0 {
+            self.offset_col -= col;
+        }
+    }
+    pub fn shift_top(&mut self, row: usize) {
+        if self.offset_row > 0 {
+            self.offset_row -= row;
+        }
+    }
+    pub fn shift_bottom(&mut self, row: usize) {
+        self.offset_row += row;
     }
 }
