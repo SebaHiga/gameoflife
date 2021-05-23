@@ -16,19 +16,13 @@ fn main() {
 
         for _ in 0..256 {
             cells.push(Cell {
-                content: 'X',
-                status: Status::Dead,
+                content: '█',
+                status: Status::get_rand(),
             });
         }
 
         matrix.push(cells);
     }
-
-    matrix[2][10].set_status(Status::Alive);
-    matrix[3][11].set_status(Status::Alive);
-    matrix[4][9].set_status(Status::Alive);
-    matrix[4][10].set_status(Status::Alive);
-    matrix[4][11].set_status(Status::Alive);
 
     let mut gol = GameOfLife {
         matrix: matrix.clone(),
