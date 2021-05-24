@@ -1,44 +1,63 @@
-use std::{io::Read, thread, time};
+use std::io::{stdin, stdout};
+use std::sync::{Arc, Mutex};
+use std::{thread, time};
 
-use termion::async_stdin;
+use termion::event::Key;
+use termion::input::TermRead;
+use termion::raw::IntoRawMode;
 
 mod conway;
 use conway::GameOfLife;
 
-fn main() {
-    let mut stdin = async_stdin().bytes();
+fn generate_game_thread(play: &Arc<Mutex<bool>>) -> Arc<Mutex<GameOfLife>> {
     let fps = 10.0;
-    let ten_millis = time::Duration::from_secs_f32(1.0 / fps);
+    let gol = Arc::new(Mutex::new(GameOfLife::new()));
+    let time_wait = time::Duration::from_secs_f32(1.0 / fps);
 
-    let mut gol = GameOfLife::new();
+    let play = play.clone();
+    let th_gol = Arc::clone(&gol);
 
-    loop {
-        let b = stdin.next();
+    thread::spawn(move || loop {
+        th_gol.lock().unwrap().render();
+        thread::sleep(time_wait);
 
-        match b {
-            Some(x) => match x {
-                Ok(k) => match k {
-                    b'q' => break,
-                    b'a' => gol.shift_left(1),
-                    b'd' => gol.shift_right(1),
-                    b'w' => gol.shift_top(1),
-                    b's' => gol.shift_bottom(1),
-                    _ => {}
-                },
-                _ => {}
-            },
-            None => {}
+        if *play.lock().unwrap() {
+            th_gol.lock().unwrap().process();
         }
+    });
 
-        // temporal manual next
-        // V        if let Some(Ok(b'n')) = b {
-        //         } else if let Some(Ok(b'q')) = b {
-        //             break;
-        //         }
+    gol
+}
 
-        gol.process();
-        gol.render();
+fn main() {
+    let stdin = stdin();
+    let play = Arc::new(Mutex::new(true));
+    let mut _stdout = stdout().into_raw_mode().unwrap();
 
-        thread::sleep(ten_millis);
+    let gol = generate_game_thread(&play);
+
+    for c in stdin.keys() {
+        match c.unwrap() {
+            Key::Char('q') => {
+                break;
+            }
+            Key::Char('s') => {
+                let p = *play.lock().unwrap();
+                *play.lock().unwrap() = !p;
+            }
+            Key::Up => {
+                gol.lock().unwrap().shift_top(1);
+            }
+            Key::Down => {
+                gol.lock().unwrap().shift_bottom(1);
+            }
+            Key::Left => {
+                gol.lock().unwrap().shift_left(1);
+            }
+            Key::Right => {
+                gol.lock().unwrap().shift_right(1);
+            }
+            _ => println!("Other"),
+        }
     }
 }
