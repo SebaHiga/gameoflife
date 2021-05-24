@@ -149,8 +149,6 @@ impl GameOfLife {
             if index_row - self.offset_row >= (row - 2) as usize {
                 break;
             }
-
-            write!(stdout, "\n\r").unwrap();
         }
     }
 

@@ -25,8 +25,7 @@ fn generate_game_thread(play: &Arc<Mutex<bool>>) -> Arc<Mutex<GameOfLife>> {
 
         write!(
             stdout,
-            "{clear}{goto}{col}x{row} Playing: {playing}\n\r",
-            clear = termion::clear::All,
+            "{goto}{col}x{row} Playing: {playing}\n\r",
             goto = termion::cursor::Goto(1, 1),
             col = col,
             row = row,
@@ -48,9 +47,11 @@ fn generate_game_thread(play: &Arc<Mutex<bool>>) -> Arc<Mutex<GameOfLife>> {
 fn main() {
     let stdin = io::stdin();
     let play = Arc::new(Mutex::new(true));
-    let mut _stdout = MouseTerminal::from(io::stdout().into_raw_mode().unwrap());
+    let mut stdout = MouseTerminal::from(io::stdout().into_raw_mode().unwrap());
 
     let gol = generate_game_thread(&play);
+
+    write!(stdout, "{}", termion::clear::All).unwrap();
 
     for c in stdin.events() {
         match c.unwrap() {
