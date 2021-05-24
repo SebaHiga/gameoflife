@@ -1,9 +1,10 @@
-use std::io::{stdin, stdout};
+use std::io::{self};
 use std::sync::{Arc, Mutex};
 use std::{thread, time};
 
 use termion::event::Key;
-use termion::input::TermRead;
+use termion::event::*;
+use termion::input::{MouseTerminal, TermRead};
 use termion::raw::IntoRawMode;
 
 mod conway;
@@ -30,34 +31,37 @@ fn generate_game_thread(play: &Arc<Mutex<bool>>) -> Arc<Mutex<GameOfLife>> {
 }
 
 fn main() {
-    let stdin = stdin();
+    let stdin = io::stdin();
     let play = Arc::new(Mutex::new(true));
-    let mut _stdout = stdout().into_raw_mode().unwrap();
+    let mut _stdout = MouseTerminal::from(io::stdout().into_raw_mode().unwrap());
 
     let gol = generate_game_thread(&play);
 
-    for c in stdin.keys() {
+    for c in stdin.events() {
         match c.unwrap() {
-            Key::Char('q') => {
-                break;
-            }
-            Key::Char('s') => {
-                let p = *play.lock().unwrap();
-                *play.lock().unwrap() = !p;
-            }
-            Key::Up => {
-                gol.lock().unwrap().shift_top(1);
-            }
-            Key::Down => {
-                gol.lock().unwrap().shift_bottom(1);
-            }
-            Key::Left => {
-                gol.lock().unwrap().shift_left(1);
-            }
-            Key::Right => {
-                gol.lock().unwrap().shift_right(1);
-            }
-            _ => println!("Other"),
+            Event::Key(k) => match k {
+                Key::Char('q') => {
+                    break;
+                }
+                Key::Char('s') => {
+                    let p = *play.lock().unwrap();
+                    *play.lock().unwrap() = !p;
+                }
+                Key::Up => gol.lock().unwrap().shift_top(1),
+                Key::Down => gol.lock().unwrap().shift_bottom(1),
+                Key::Left => gol.lock().unwrap().shift_left(1),
+                Key::Right => gol.lock().unwrap().shift_right(1),
+                _ => {}
+            },
+            Event::Mouse(me) => match me {
+                MouseEvent::Press(_, col, row) => {
+                    gol.lock()
+                        .unwrap()
+                        .toggle_cell((row - 1) as usize, (col - 1) as usize);
+                }
+                _ => {}
+            },
+            _ => {}
         }
     }
 }

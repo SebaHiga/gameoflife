@@ -11,7 +11,7 @@ pub enum Status {
 impl Status {
     pub fn get_rand() -> Status {
         let mut rng = thread_rng();
-        if rng.gen_range(0, 10) > 6 {
+        if rng.gen_range(0, 10) > 8 {
             return Status::Alive;
         }
 
@@ -162,16 +162,27 @@ impl GameOfLife {
         self.offset_col += col;
     }
     pub fn shift_left(&mut self, col: usize) {
-        if self.offset_col > 0 {
+        if self.offset_col > 1 {
             self.offset_col -= col;
         }
     }
     pub fn shift_top(&mut self, row: usize) {
-        if self.offset_row > 0 {
+        if self.offset_row > 1 {
             self.offset_row -= row;
         }
     }
     pub fn shift_bottom(&mut self, row: usize) {
         self.offset_row += row;
+    }
+
+    pub fn toggle_cell(&mut self, row: usize, col: usize) {
+        match self.matrix[self.offset_row + row][self.offset_col + col].get_status() {
+            Status::Alive => {
+                self.matrix[self.offset_row + row][self.offset_col + col].set_status(Status::Dead)
+            }
+            Status::Dead => {
+                self.matrix[self.offset_row + row][self.offset_col + col].set_status(Status::Alive)
+            }
+        }
     }
 }
