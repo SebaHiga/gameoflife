@@ -1,4 +1,7 @@
-use std::io::{stdout, Write};
+use std::{
+    io::{stdout, Write},
+    usize,
+};
 
 use rand::prelude::*;
 use termion::{raw::IntoRawMode, terminal_size};
@@ -41,19 +44,22 @@ impl Cell {
 
 pub struct GameOfLife {
     matrix: Vec<Vec<Cell>>,
-    matrix_prev: Vec<Vec<Cell>>,
     offset_row: usize,
     offset_col: usize,
+    max_row: usize,
+    max_col: usize,
 }
 
 impl GameOfLife {
     pub fn new() -> GameOfLife {
+        let max_col = 255;
+        let max_row = 255;
         let mut matrix = Vec::new();
 
-        for _ in 0..256 {
+        for _ in 0..max_row {
             let mut cells = Vec::new();
 
-            for _ in 0..256 {
+            for _ in 0..max_col {
                 cells.push(Cell {
                     content: '█',
                     status: Status::get_rand(),
@@ -65,13 +71,14 @@ impl GameOfLife {
 
         GameOfLife {
             matrix: matrix.clone(),
-            matrix_prev: matrix.clone(),
             offset_row: 64,
             offset_col: 64,
+            max_row: max_row,
+            max_col: max_col,
         }
     }
 
-    fn get_surrounded_alive(&self, row: usize, col: usize) -> u16 {
+    fn get_surrounded_alive(&self, matrix_prev: &Vec<Vec<Cell>>, row: usize, col: usize) -> u16 {
         let mut alives = 0;
 
         for r in 0..=2 {
@@ -79,7 +86,7 @@ impl GameOfLife {
                 if r == 1 && c == 1 {
                     continue;
                 } else {
-                    if self.matrix_prev[row + r - 1][col + c - 1].get_status() == Status::Alive {
+                    if matrix_prev[row + r - 1][col + c - 1].get_status() == Status::Alive {
                         alives += 1;
                     }
                 }
@@ -90,11 +97,11 @@ impl GameOfLife {
     }
 
     pub fn process(&mut self) {
-        self.matrix_prev = self.matrix.clone();
+        let matrix_prev = self.matrix.clone();
 
         for index_row in 1..self.matrix.len() - 1 {
             for index_col in 1..self.matrix[index_row].len() - 1 {
-                let alive = self.get_surrounded_alive(index_row, index_col);
+                let alive = self.get_surrounded_alive(&matrix_prev, index_row, index_col);
 
                 match self.matrix[index_row][index_col].get_status() {
                     Status::Alive => {
@@ -119,19 +126,9 @@ impl GameOfLife {
         let mut stdout = stdout().into_raw_mode().unwrap();
         let (col, row) = terminal_size().unwrap();
 
-        write!(
-            stdout,
-            "{clear}{goto}",
-            clear = termion::clear::All,
-            goto = termion::cursor::Goto(1, 1)
-        )
-        .unwrap();
-
         for index_row in self.offset_row..self.matrix.len() {
             for index_col in self.offset_col..self.matrix[index_row].len() {
-                let cell = self.matrix[index_row][index_col].clone();
-
-                if cell.get_status() == Status::Alive {
+                if self.matrix[index_row][index_col].get_status() == Status::Alive {
                     write!(
                         stdout,
                         "{}",
@@ -145,12 +142,11 @@ impl GameOfLife {
                 stdout.flush().unwrap();
 
                 if index_col - self.offset_col >= (col - 1) as usize {
-                    // println!("breaked with col rendered {} cols {}", col_rendered, col);
                     break;
                 }
             }
 
-            if index_row - self.offset_row >= (row - 1) as usize {
+            if index_row - self.offset_row >= (row - 2) as usize {
                 break;
             }
 
@@ -159,7 +155,9 @@ impl GameOfLife {
     }
 
     pub fn shift_right(&mut self, col: usize) {
-        self.offset_col += col;
+        if self.offset_col + col < self.max_col {
+            self.offset_col += col;
+        }
     }
     pub fn shift_left(&mut self, col: usize) {
         if self.offset_col > 1 {
@@ -172,10 +170,16 @@ impl GameOfLife {
         }
     }
     pub fn shift_bottom(&mut self, row: usize) {
-        self.offset_row += row;
+        if self.offset_row + row < self.max_row {
+            self.offset_row += row;
+        }
     }
 
     pub fn toggle_cell(&mut self, row: usize, col: usize) {
+        if self.offset_row + row > self.max_row || self.offset_col + col > self.max_col {
+            return;
+        }
+
         match self.matrix[self.offset_row + row][self.offset_col + col].get_status() {
             Status::Alive => {
                 self.matrix[self.offset_row + row][self.offset_col + col].set_status(Status::Dead)
