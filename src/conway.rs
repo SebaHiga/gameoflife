@@ -187,4 +187,20 @@ impl GameOfLife {
             }
         }
     }
+
+    pub fn shift_vertical(&mut self, row: i16) {
+        if row > 0 {
+            self.shift_bottom(row as usize);
+        } else {
+            self.shift_top(row.abs() as usize);
+        }
+    }
+
+    pub fn shift_horizontal(&mut self, col: i16) {
+        if col > 0 {
+            self.shift_right(col.abs() as usize);
+        } else {
+            self.shift_left(col.abs() as usize);
+        }
+    }
 }

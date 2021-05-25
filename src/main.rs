@@ -25,7 +25,7 @@ fn generate_game_thread(play: &Arc<Mutex<bool>>) -> Arc<Mutex<GameOfLife>> {
 
         write!(
             stdout,
-            "{goto}{col}x{row} Playing: {playing}\n\r",
+            "{goto}{col}x{row} Press s to stop/play and use left click to put a cell or move screen | Playing: {playing}\n\r",
             goto = termion::cursor::Goto(1, 1),
             col = col,
             row = row,
@@ -52,6 +52,8 @@ fn main() {
     write!(stdout, "{}", termion::clear::All).unwrap();
 
     let gol = generate_game_thread(&play);
+    let mut prev_row = 0;
+    let mut prev_col = 0;
 
     for c in stdin.events() {
         match c.unwrap() {
@@ -70,10 +72,30 @@ fn main() {
                 _ => {}
             },
             Event::Mouse(me) => match me {
-                MouseEvent::Press(_, col, row) => {
-                    gol.lock()
-                        .unwrap()
-                        .toggle_cell((row - 2) as usize, (col - 1) as usize);
+                MouseEvent::Press(button, col, row) => match button {
+                    MouseButton::Left => {
+                        if !*play.lock().unwrap() {
+                            gol.lock()
+                                .unwrap()
+                                .toggle_cell((row - 2) as usize, (col - 1) as usize);
+                        } else {
+                            prev_row = row;
+                            prev_col = col;
+                        }
+                    }
+                    _ => {}
+                },
+                MouseEvent::Hold(col, row) => {
+                    if *play.lock().unwrap() {
+                        let diff_col = col as i16 - prev_col as i16;
+                        let diff_row = row as i16 - prev_row as i16;
+
+                        prev_col = col;
+                        prev_row = row;
+
+                        gol.lock().unwrap().shift_vertical(diff_row);
+                        gol.lock().unwrap().shift_horizontal(diff_col);
+                    }
                 }
                 _ => {}
             },
