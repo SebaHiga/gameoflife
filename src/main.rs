@@ -22,9 +22,9 @@ fn generate_game_thread(play: &Arc<Mutex<bool>>) -> Arc<Mutex<GameOfLife>> {
     thread::spawn(move || loop {
         write!(
             stdout,
-            "{goto}Press 'e' to enter edit mode. Use mouse to drag and click. Press 'q' to exit | Playing: {playing} \n\r",
+            "{goto}Press 'e' to enter edit mode, 'q' to exit, 'c' to clean and 'r' to randomize. Use the mouse button! | Edit mode: {playing} \n\r",
             goto = termion::cursor::Goto(1, 1),
-            playing = *&play.lock().unwrap()
+            playing = !*play.lock().unwrap()
         )
         .unwrap();
 
@@ -60,6 +60,8 @@ fn main() {
                     let p = *play.lock().unwrap();
                     *play.lock().unwrap() = !p;
                 }
+                Key::Char('c') => gol.lock().unwrap().clean(),
+                Key::Char('r') => gol.lock().unwrap().randomize(),
                 Key::Up => gol.lock().unwrap().shift_top(1),
                 Key::Down => gol.lock().unwrap().shift_bottom(1),
                 Key::Left => gol.lock().unwrap().shift_left(1),
@@ -90,6 +92,10 @@ fn main() {
 
                         gol.lock().unwrap().shift_vertical(diff_row);
                         gol.lock().unwrap().shift_horizontal(diff_col);
+                    } else {
+                        gol.lock()
+                            .unwrap()
+                            .toggle_cell((row - 2) as usize, (col - 1) as usize);
                     }
                 }
                 _ => {}

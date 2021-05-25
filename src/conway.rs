@@ -162,6 +162,22 @@ impl GameOfLife {
         }
     }
 
+    pub fn clean(&mut self) {
+        for row in &mut self.matrix {
+            for cell in row {
+                cell.set_status(Status::Dead);
+            }
+        }
+    }
+
+    pub fn randomize(&mut self) {
+        for row in &mut self.matrix {
+            for cell in row {
+                cell.set_status(Status::get_rand());
+            }
+        }
+    }
+
     pub fn shift_right(&mut self, col: usize) {
         if self.offset_col + col < self.max_col {
             self.offset_col += col;
