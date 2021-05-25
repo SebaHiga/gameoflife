@@ -4,7 +4,7 @@ use std::{
 };
 
 use rand::prelude::*;
-use termion::{raw::IntoRawMode, terminal_size};
+use termion::{cursor::HideCursor, raw::IntoRawMode, terminal_size};
 #[derive(Clone, Copy, std::cmp::PartialEq)]
 pub enum Status {
     Alive,
@@ -123,7 +123,7 @@ impl GameOfLife {
     }
 
     pub fn render(&self) {
-        let mut stdout = stdout().into_raw_mode().unwrap();
+        let mut stdout = HideCursor::from(stdout().into_raw_mode().unwrap());
         let (col, row) = terminal_size().unwrap();
 
         for index_row in self.offset_row..self.matrix.len() {
