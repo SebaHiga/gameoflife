@@ -49,9 +49,9 @@ fn main() {
     let play = Arc::new(Mutex::new(true));
     let mut stdout = MouseTerminal::from(io::stdout().into_raw_mode().unwrap());
 
-    let gol = generate_game_thread(&play);
-
     write!(stdout, "{}", termion::clear::All).unwrap();
+
+    let gol = generate_game_thread(&play);
 
     for c in stdin.events() {
         match c.unwrap() {
