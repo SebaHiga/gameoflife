@@ -6,7 +6,6 @@ use termion::event::Key;
 use termion::event::*;
 use termion::input::{MouseTerminal, TermRead};
 use termion::raw::IntoRawMode;
-use termion::terminal_size;
 
 mod conway;
 use conway::GameOfLife;
@@ -21,14 +20,10 @@ fn generate_game_thread(play: &Arc<Mutex<bool>>) -> Arc<Mutex<GameOfLife>> {
     let th_gol = Arc::clone(&gol);
 
     thread::spawn(move || loop {
-        let (col, row) = terminal_size().unwrap();
-
         write!(
             stdout,
-            "{goto}{col}x{row} Press s to stop/play and click on screen | Playing: {playing}\n\r",
+            "{goto}Press 'e' to enter edit mode. Use mouse to drag and click. Press 'q' to exit | Playing: {playing} \n\r",
             goto = termion::cursor::Goto(1, 1),
-            col = col,
-            row = row,
             playing = *&play.lock().unwrap()
         )
         .unwrap();
@@ -61,7 +56,7 @@ fn main() {
                 Key::Char('q') => {
                     break;
                 }
-                Key::Char('s') => {
+                Key::Char('e') => {
                     let p = *play.lock().unwrap();
                     *play.lock().unwrap() = !p;
                 }
