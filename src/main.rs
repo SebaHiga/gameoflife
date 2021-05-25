@@ -25,7 +25,7 @@ fn generate_game_thread(play: &Arc<Mutex<bool>>) -> Arc<Mutex<GameOfLife>> {
 
         write!(
             stdout,
-            "{goto}{col}x{row} Press s to stop/play and use left click to put a cell or move screen | Playing: {playing}\n\r",
+            "{goto}{col}x{row} Press s to stop/play and click on screen | Playing: {playing}\n\r",
             goto = termion::cursor::Goto(1, 1),
             col = col,
             row = row,

@@ -52,8 +52,8 @@ pub struct GameOfLife {
 
 impl GameOfLife {
     pub fn new() -> GameOfLife {
-        let max_col = 255;
-        let max_row = 255;
+        let max_col = 512;
+        let max_row = 128;
         let mut matrix = Vec::new();
 
         for _ in 0..max_row {
@@ -143,11 +143,21 @@ impl GameOfLife {
 
                 if index_col - self.offset_col >= (col - 1) as usize {
                     break;
+                } else if index_col == self.matrix[index_row].len() - 1 {
+                    for _ in index_col - self.offset_col..(col - 1) as usize {
+                        write!(stdout, " ").unwrap();
+                    }
+                    write!(stdout, "\n\r").unwrap();
                 }
             }
 
             if index_row - self.offset_row >= (row - 2) as usize {
                 break;
+            } else if index_row == self.matrix.len() - 1 {
+                for _ in index_row - self.offset_row..(row - 2) as usize {
+                    write!(stdout, "\n\r").unwrap();
+                    write!(stdout, "\n\r").unwrap();
+                }
             }
         }
     }
@@ -158,7 +168,7 @@ impl GameOfLife {
         }
     }
     pub fn shift_left(&mut self, col: usize) {
-        if self.offset_col > 1 {
+        if self.offset_col > 1 && (self.offset_col as i16 - col as i16) > 0 {
             self.offset_col -= col;
         }
     }
@@ -190,17 +200,17 @@ impl GameOfLife {
 
     pub fn shift_vertical(&mut self, row: i16) {
         if row > 0 {
-            self.shift_bottom(row as usize);
-        } else {
             self.shift_top(row.abs() as usize);
+        } else {
+            self.shift_bottom(row.abs() as usize);
         }
     }
 
     pub fn shift_horizontal(&mut self, col: i16) {
         if col > 0 {
-            self.shift_right(col.abs() as usize);
-        } else {
             self.shift_left(col.abs() as usize);
+        } else {
+            self.shift_right(col.abs() as usize);
         }
     }
 }
