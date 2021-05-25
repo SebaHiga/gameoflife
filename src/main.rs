@@ -10,19 +10,19 @@ use termion::raw::IntoRawMode;
 mod conway;
 use conway::GameOfLife;
 
-fn generate_game_thread(play: &Arc<Mutex<bool>>) -> Arc<Mutex<GameOfLife>> {
-    let fps = 10.0;
+fn generate_game_thread(play: &Arc<Mutex<bool>>, fps: &Arc<Mutex<f32>>) -> Arc<Mutex<GameOfLife>> {
     let gol = Arc::new(Mutex::new(GameOfLife::new()));
-    let time_wait = time::Duration::from_secs_f32(1.0 / fps);
     let mut stdout = stdout().into_raw_mode().unwrap();
 
+    let fps = fps.clone();
     let play = play.clone();
     let th_gol = Arc::clone(&gol);
 
     thread::spawn(move || loop {
+        let time_wait = time::Duration::from_secs_f32(1.0 / *fps.lock().unwrap());
         write!(
             stdout,
-            "{goto}Press 'e' to enter edit mode, 'q' to exit, 'c' to clean and 'r' to randomize. Use the mouse button! | Edit mode: {playing} \n\r",
+            "{goto}Press 'e' to enter edit mode, 'q' to exit, 'c' to clean, 'r' to randomize and 1 to 5 for speed. Use the mouse button! | Edit mode: {playing} \n\r",
             goto = termion::cursor::Goto(1, 1),
             playing = !*play.lock().unwrap()
         )
@@ -42,11 +42,12 @@ fn generate_game_thread(play: &Arc<Mutex<bool>>) -> Arc<Mutex<GameOfLife>> {
 fn main() {
     let stdin = io::stdin();
     let play = Arc::new(Mutex::new(true));
+    let fps = Arc::new(Mutex::new(10.0));
     let mut stdout = MouseTerminal::from(io::stdout().into_raw_mode().unwrap());
 
     write!(stdout, "{}", termion::clear::All).unwrap();
 
-    let gol = generate_game_thread(&play);
+    let gol = generate_game_thread(&play, &fps);
     let mut prev_row = 0;
     let mut prev_col = 0;
 
@@ -62,6 +63,12 @@ fn main() {
                 }
                 Key::Char('c') => gol.lock().unwrap().clean(),
                 Key::Char('r') => gol.lock().unwrap().randomize(),
+                Key::Char('1') => *fps.lock().unwrap() = 10.0,
+                Key::Char('2') => *fps.lock().unwrap() = 20.0,
+                Key::Char('3') => *fps.lock().unwrap() = 30.0,
+                Key::Char('4') => *fps.lock().unwrap() = 40.0,
+                Key::Char('5') => *fps.lock().unwrap() = 50.0,
+                Key::Char('0') => *fps.lock().unwrap() = 10000.0,
                 Key::Up => gol.lock().unwrap().shift_top(1),
                 Key::Down => gol.lock().unwrap().shift_bottom(1),
                 Key::Left => gol.lock().unwrap().shift_left(1),

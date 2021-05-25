@@ -71,8 +71,8 @@ impl GameOfLife {
 
         GameOfLife {
             matrix: matrix.clone(),
-            offset_row: 64,
-            offset_col: 64,
+            offset_row: 0,
+            offset_col: 0,
             max_row: max_row,
             max_col: max_col,
         }
