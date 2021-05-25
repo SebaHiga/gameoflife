@@ -179,7 +179,10 @@ impl GameOfLife {
     }
 
     pub fn shift_right(&mut self, col: usize) {
-        if self.offset_col + col < self.max_col {
+        let (tleft, _) = terminal_size().unwrap();
+        if self.offset_col + col < self.max_col
+            && self.offset_col + col < self.max_col - tleft as usize
+        {
             self.offset_col += col;
         }
     }
@@ -194,7 +197,10 @@ impl GameOfLife {
         }
     }
     pub fn shift_bottom(&mut self, row: usize) {
-        if self.offset_row + row < self.max_row {
+        let (_, trow) = terminal_size().unwrap();
+        if self.offset_row + row < self.max_row
+            && self.offset_row + row < self.max_row - trow as usize
+        {
             self.offset_row += row;
         }
     }

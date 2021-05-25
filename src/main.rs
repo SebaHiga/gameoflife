@@ -20,6 +20,7 @@ fn generate_game_thread(play: &Arc<Mutex<bool>>, fps: &Arc<Mutex<f32>>) -> Arc<M
 
     thread::spawn(move || loop {
         let time_wait = time::Duration::from_secs_f32(1.0 / *fps.lock().unwrap());
+
         write!(
             stdout,
             "{goto}Press 'e' to enter edit mode, 'q' to exit, 'c' to clean, 'r' to randomize and 1 to 5 for speed. Use the mouse button! | Edit mode: {playing} \n\r",
@@ -27,6 +28,8 @@ fn generate_game_thread(play: &Arc<Mutex<bool>>, fps: &Arc<Mutex<f32>>) -> Arc<M
             playing = !*play.lock().unwrap()
         )
         .unwrap();
+
+        write!(stdout, "{goto}", goto = termion::cursor::Goto(1, 2),).unwrap();
 
         th_gol.lock().unwrap().render();
         thread::sleep(time_wait);
